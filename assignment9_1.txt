@@ -1,0 +1,107 @@
+1. Use the below given data set
+Data Set
+   Ans:
+    >df <- read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/00273/Example_WearableComputing_weight_lifting_exercises_biceps_curl_variations.csv",
+                     header = FALSE)
+
+    >data<-df[-1,]
+    >head(data)
+    >colnames(data) <- as.character(unlist(data[1,]))
+    >data1 = data[-1, ]
+
+    >data1<-as.data.frame(lapply(data1, as.integer))
+
+    >table(data1$classe)
+
+    >data1$classe<-as.factor(data1$classe)
+
+2. Perform the below given activities:
+a. Create classification model using logistic regression model
+   Ans:
+     >library(nnet)
+     >data1$out<-relevel(data1$classe, ref="2")
+     >mymodel<-multinom(out~ ., data=data1)
+     >summary(mymodel)
+     >predict(mymodel,data1)
+
+     >cm<-table(predict(mymodel),data1$classe)
+
+b. verify model goodness of fit
+   Ans:
+    > actual<-table(data1$classe)
+    > expected<-table(predict(mymodel))
+ 
+    > chisq.test(actual, p = expected/sum(expected))
+
+	Chi-squared test for given probabilities
+
+   data:  actual
+   X-squared = 106.46, df = 4, p-value < 2.2e-16
+
+   #as p vallue is very low we cannot reject the null hypothesis so the modle is 
+     having good fit
+
+c. Report the accuracy measures
+  Ans:
+   > accuracy=sum(diag(cm))/sum(cm)
+   > accuracy
+   [1] 0.9515408
+
+d. Report the variable importance
+   Ans:
+    #varible importance
+
+    >library(caret)
+    >varImp(mymodel, scale = FALSE)
+
+e. Report the unimportant variables
+  Ans:
+   raw_timestamp_part_2, new_window ,yaw_belt,kurtosis_yaw_belt,kurtosis_yaw_belt,skewness_yaw_belt,
+   max_roll_belt,max_picth_belt ,max_yaw_belt ,min_roll_belt ,min_pitch_belt ,min_yaw_belt,
+   amplitude_pitch_belt ,amplitude_yaw_belt ,var_total_accel_belt ,avg_roll_belt ,stddev_roll_belt ,       
+   var_roll_belt, avg_pitch_belt ,stddev_pitch_belt ,var_pitch_belt ,avg_yaw_belt ,stddev_yaw_belt,
+   magnet_belt_x ,roll_arm ,pitch_arm ,yaw_arm ,var_yaw_arm ,gyros_arm_x ,gyros_arm_y ,gyros_arm_z,              
+   accel_arm_x, accel_arm_y ,accel_arm_z ,magnet_arm_x ,magnet_arm_y ,magnet_arm_z ,kurtosis_yaw_arm,         
+   skewness_roll_arm ,skewness_pitch_arm ,skewness_yaw_arm ,max_picth_arm ,max_yaw_arm ,min_roll_arm,          
+   min_pitch_arm ,min_yaw_arm ,amplitude_roll_arm ,amplitude_pitch_arm ,amplitude_yaw_arm ,roll_dumbbell,           
+   pitch_dumbbell ,yaw_dumbbell,kurtosis_roll_dumbbell ,kurtosis_yaw_dumbbell ,skewness_pitch_dumbbell,  
+   skewness_yaw_dumbbell,max_roll_dumbbell ,max_picth_dumbbell ,max_yaw_dumbbell ,min_roll_dumbbell,
+   min_yaw_dumbbell ,amplitude_pitch_dumbbell ,amplitude_yaw_dumbbell ,var_accel_dumbbell ,avg_roll_dumbbell,      
+   stddev_roll_dumbbell ,stddev_pitch_dumbbell ,var_pitch_dumbbell ,avg_yaw_dumbbell ,stddev_yaw_dumbbell,
+   gyros_dumbbell_y ,gyros_dumbbell_z ,magnet_dumbbell_z ,roll_forearm ,pitch_forearm ,yaw_forearm,
+   kurtosis_picth_forearm ,kurtosis_yaw_forearm ,skewness_yaw_forearm ,max_roll_forearm ,max_picth_forearm,     
+   max_yaw_forearm ,min_roll_forearm ,min_pitch_forearm ,min_yaw_forearm ,amplitude_roll_forearm ,amplitude_pitch_forearm , 
+   amplitude_yaw_forearm ,var_accel_forearm ,avg_roll_forearm ,var_roll_forearm ,avg_pitch_forearm ,stddev_pitch_forearm,    
+   var_pitch_forearm ,avg_yaw_forearm ,stddev_yaw_forearm ,var_yaw_forearm ,gyros_forearm_x ,gyros_forearm_y ,         
+   gyros_forearm_z ,accel_forearm_x ,accel_forearm_y ,accel_forearm_z ,magnet_forearm_x ,magnet_forearm_y ,magnet_forearm_z.
+ 
+   #the above variables are having less importance in the modle
+
+f. Interpret the results
+   Ans:
+    Here we will take a leap into the unknown with multinomial logistic regressions! 
+    As a quick background, these regressions are only used when we want to predict the
+    odds of falling into one of three or more groups. It is distinctly different from ordinal 
+    logistic regression, which assesses odds of being placed in a higher-level group when the 
+     groups can be meaningfully ordered from low to high. Instead, multinomial logistic regression 
+     uses a set of predictors to determine whether you are more likely to be in a particular group
+     when the groups have no meaningful “low to high” order
+
+   As with any regression, the first step is to look at the model fitting information. 
+   This tells you whether you should look further into the model or accept the null hypothesis. 
+   You will need to report the values for the chi-square, degrees of freedom, and p (sometimes called sig.),
+   but the p really tells you all you need to know about the significance of the model.
+   Some reviewers will also request the -2 Log Likelihood, so it is not a bad idea to at
+   least take note of it just in case. If your p value suggests significance (i.e., less than .05),
+    you are in the clear to look at the parameter estimates, which should have a set of outputs 
+   for each independent (predictor) variable in the model.
+
+   This is where things get interesting, but much easier than they seem. 
+   The output will show a set of results for each category of the dependent variable. 
+   What is really going on is basically an individual binary logistic regression for each
+   category of the dependent variable, which assesses the likelihood of being in that group
+   compared to being in any of the other groups. 
+g. Visualize the results
+   Ans:
+   >library(effects)
+   >plot(allEffects(mymodel))
